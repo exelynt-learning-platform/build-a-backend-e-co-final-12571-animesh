@@ -10,9 +10,11 @@ import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
+
 @Entity
 @Data
 public class CartItem {
+
     @Id
     @GeneratedValue
     private Long id;
@@ -20,22 +22,8 @@ public class CartItem {
     @ManyToOne
     private Product product;
 
-    private int quantity;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Product getProduct() {
         return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
     }
 
     public int getQuantity() {
@@ -45,4 +33,12 @@ public class CartItem {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+
+    private int quantity;
+
+    @ManyToOne   // ✅ FIXED
+    private Cart cart;
+
+
+
 }

@@ -9,9 +9,11 @@ import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
+
 @Entity
 @Data
 public class Order {
+
     @Id
     @GeneratedValue
     private Long id;
@@ -23,10 +25,6 @@ public class Order {
     private List<Product> products;
 
     private double totalPrice;
-    private String status;
-
-    public void setUser(User user) {
-    }
 
     public Long getId() {
         return id;
@@ -48,6 +46,10 @@ public class Order {
         this.products = products;
     }
 
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -56,11 +58,17 @@ public class Order {
         this.status = status;
     }
 
-    public double getTotalPrice() {
-        return totalPrice;
-    }
-
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
     }
+
+    private String status;
+
+    // ✅ FIXED
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+
+
 }

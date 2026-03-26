@@ -1,9 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Cart;
-import com.example.demo.entity.CartItem;
-import com.example.demo.entity.Order;
-import com.example.demo.entity.Product;
+import com.example.demo.entity.*;
 import com.example.demo.repository.CartRepo;
 import com.example.demo.repository.OrderRepo;
 import com.example.demo.repository.UserRepo;
@@ -22,9 +19,7 @@ public class OrderService {
 
     public Order createOrder(Long userId) {
 
-        Cart cart = cartRepo.findAll().stream()
-                .filter(c -> c.getUser().getId().equals(userId))
-                .findFirst()
+        Cart cart = cartRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
         Order order = new Order();
@@ -43,14 +38,14 @@ public class OrderService {
         order.setTotalPrice(total);
         order.setStatus("CREATED");
 
-        cart.getItems().clear(); // clear cart after order
+        // ✅ Reduce stock
+        for (CartItem item : cart.getItems()) {
+            Product product = item.getProduct();
+            product.setStock(product.getStock() - item.getQuantity());
+        }
+
+        cart.getItems().clear();
 
         return orderRepo.save(order);
-    }
-
-    public List<Order> getUserOrders(Long userId) {
-        return orderRepo.findAll().stream()
-                .filter(o -> o.getUser().getId().equals(userId))
-                .toList();
     }
 }
