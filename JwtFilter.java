@@ -21,11 +21,11 @@ public class JwtFilter extends GenericFilter {
 
         HttpServletRequest req = (HttpServletRequest) request;
 
-        String authHeader = req.getHeader("Authorization");
+        String header = req.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            jwtUtil.extractUsername(token); // basic validation
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            jwtUtil.extractUsername(token);
         }
 
         chain.doFilter(request, response);

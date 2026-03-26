@@ -1,17 +1,12 @@
 package com.example.demo.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@AllArgsConstructor
-@NoArgsConstructor
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 public class User {
 
     @Id
@@ -21,9 +16,4 @@ public class User {
     private String username;
     private String password;
     private String role;
-
-    // ✅ FIXED
-    public String getRole() {
-        return this.role;
-    }
 }

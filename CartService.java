@@ -1,9 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.*;
-import com.example.demo.repository.CartRepo;
-import com.example.demo.repository.ProductRepo;
-import com.example.demo.repository.UserRepo;
+import com.example.demo.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -48,21 +46,20 @@ public class CartService {
         CartItem item = new CartItem();
         item.setProduct(product);
         item.setQuantity(qty);
-        item.setCart(cart);
+        item.setCart(cart); // ✅ FIX
 
         cart.getItems().add(item);
 
-        return cartRepo.save(cart); // ✅ cascade handles save
+        return cartRepo.save(cart);
     }
 
     public Cart removeItem(Long userId, Long itemId) {
-
         Cart cart = getUserCart(userId);
 
         boolean removed = cart.getItems().removeIf(i -> i.getId().equals(itemId));
 
         if (!removed) {
-            throw new RuntimeException("Item not found in user's cart");
+            throw new RuntimeException("Item not found");
         }
 
         return cartRepo.save(cart);

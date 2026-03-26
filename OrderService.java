@@ -22,12 +22,12 @@ public class OrderService {
         this.productRepo = productRepo;
     }
 
-    public Order createOrder(Long userId) {
+    public OrderEntity createOrder(Long userId) {
 
         Cart cart = cartRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        Order order = new Order();
+        OrderEntity order = new OrderEntity();
         order.setUser(userRepo.findById(userId).orElseThrow());
 
         List<Product> products = cart.getItems().stream()
@@ -43,15 +43,15 @@ public class OrderService {
         order.setTotalPrice(total);
         order.setStatus("CREATED");
 
-        // ✅ FIX: update stock + save
+        // ✅ FIX stock update
         for (CartItem item : cart.getItems()) {
             Product product = item.getProduct();
             product.setStock(product.getStock() - item.getQuantity());
-            productRepo.save(product); // ✅ IMPORTANT
+            productRepo.save(product);
         }
 
         cart.getItems().clear();
-        cartRepo.save(cart); // ✅ FIX
+        cartRepo.save(cart);
 
         return orderRepo.save(order);
     }
