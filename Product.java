@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Data
+
 public class Product {
     @Id @GeneratedValue
     private Long id;

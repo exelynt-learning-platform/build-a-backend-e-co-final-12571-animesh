@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Data
+
 public class Cart {
     @Id
     @GeneratedValue

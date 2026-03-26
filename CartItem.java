@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 @Entity
-@Data
 public class CartItem {
 
     @Id
