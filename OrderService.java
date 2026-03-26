@@ -1,21 +1,26 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.*;
-import com.example.demo.repository.CartRepo;
-import com.example.demo.repository.OrderRepo;
-import com.example.demo.repository.UserRepo;
-import lombok.RequiredArgsConstructor;
+import com.example.demo.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepo orderRepo;
     private final CartRepo cartRepo;
     private final UserRepo userRepo;
+    private final ProductRepo productRepo;
+
+    public OrderService(OrderRepo orderRepo, CartRepo cartRepo,
+                        UserRepo userRepo, ProductRepo productRepo) {
+        this.orderRepo = orderRepo;
+        this.cartRepo = cartRepo;
+        this.userRepo = userRepo;
+        this.productRepo = productRepo;
+    }
 
     public Order createOrder(Long userId) {
 
@@ -38,13 +43,15 @@ public class OrderService {
         order.setTotalPrice(total);
         order.setStatus("CREATED");
 
-        // ✅ Reduce stock
+        // ✅ FIX: update stock + save
         for (CartItem item : cart.getItems()) {
             Product product = item.getProduct();
             product.setStock(product.getStock() - item.getQuantity());
+            productRepo.save(product); // ✅ IMPORTANT
         }
 
         cart.getItems().clear();
+        cartRepo.save(cart); // ✅ FIX
 
         return orderRepo.save(order);
     }

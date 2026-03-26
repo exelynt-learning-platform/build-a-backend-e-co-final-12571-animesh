@@ -1,26 +1,21 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
 
 import java.util.List;
+import java.util.Optional;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 
 public class Cart {
+
     @Id
     @GeneratedValue
     private Long id;
 
     @OneToOne
     private User user;
-
-    @OneToMany(cascade = CascadeType.ALL)
-    private List<CartItem> items;
 
     public Long getId() {
         return id;
@@ -45,4 +40,9 @@ public class Cart {
     public void setItems(List<CartItem> items) {
         this.items = items;
     }
+
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> items;
+
+
 }

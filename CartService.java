@@ -4,18 +4,22 @@ import com.example.demo.entity.*;
 import com.example.demo.repository.CartRepo;
 import com.example.demo.repository.ProductRepo;
 import com.example.demo.repository.UserRepo;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
 @Service
-@RequiredArgsConstructor
 public class CartService {
 
     private final CartRepo cartRepo;
     private final ProductRepo productRepo;
     private final UserRepo userRepo;
+
+    public CartService(CartRepo cartRepo, ProductRepo productRepo, UserRepo userRepo) {
+        this.cartRepo = cartRepo;
+        this.productRepo = productRepo;
+        this.userRepo = userRepo;
+    }
 
     public Cart getUserCart(Long userId) {
         return cartRepo.findByUserId(userId)
@@ -37,7 +41,6 @@ public class CartService {
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        // ✅ STOCK VALIDATION
         if (qty > product.getStock()) {
             throw new RuntimeException("Not enough stock");
         }
@@ -49,18 +52,25 @@ public class CartService {
 
         cart.getItems().add(item);
 
-        return cartRepo.save(cart);
+        return cartRepo.save(cart); // ✅ cascade handles save
     }
 
     public Cart removeItem(Long userId, Long itemId) {
+
         Cart cart = getUserCart(userId);
-        cart.getItems().removeIf(i -> i.getId().equals(itemId));
+
+        boolean removed = cart.getItems().removeIf(i -> i.getId().equals(itemId));
+
+        if (!removed) {
+            throw new RuntimeException("Item not found in user's cart");
+        }
+
         return cartRepo.save(cart);
     }
 
     public void clearCart(Long userId) {
         Cart cart = getUserCart(userId);
         cart.getItems().clear();
-        cartRepo.save(cart);
+        cartRepo.save(cart); // ✅ FIX
     }
 }
