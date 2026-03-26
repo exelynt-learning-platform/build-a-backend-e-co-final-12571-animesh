@@ -40,9 +40,9 @@ public class GlobalExceptionHandler {
     }
 
     // ✅ GENERIC ERROR (fallback)
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGeneral(Exception ex) {
-        return buildResponse("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntime(RuntimeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // 🔹 Helper method
