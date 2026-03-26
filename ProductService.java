@@ -28,7 +28,7 @@ public class ProductService {
 
     public Product update(Long id, Product updated) {
         Product product = getById(id);
-        product.clone(updated.getName());
+        product.setName(updated.getName());
         product.setDescription(updated.getDescription());
         product.setPrice(updated.getPrice());
         product.setStock(updated.getStock());
