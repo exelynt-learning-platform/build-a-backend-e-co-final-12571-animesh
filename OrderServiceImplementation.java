@@ -1,0 +1,171 @@
+package com.multigenesystask.service;
+
+import java.time.LocalDateTime;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import com.multigenesystask.exception.UserException;
+import org.springframework.stereotype.Service;
+
+import com.multigenesystask.entity.Address;
+import com.multigenesystask.entity.Cart;
+import com.multigenesystask.entity.CartItem;
+import com.multigenesystask.entity.Order;
+import com.multigenesystask.entity.OrderItem;
+import com.multigenesystask.entity.PaymentDetails;
+import com.multigenesystask.entity.User;
+import com.multigenesystask.exception.OrderException;
+import com.multigenesystask.repository.AddressRepository;
+import com.multigenesystask.repository.OrderItemRepository;
+import com.multigenesystask.repository.OrderRepository;
+import com.multigenesystask.repository.UserRepository;
+import com.multigenesystask.user.domain.OrderStatus;
+import com.multigenesystask.user.domain.PaymentStatus;
+
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@AllArgsConstructor
+@Slf4j
+public class OrderServiceImplementation implements OrderService {
+
+	private CartService cartService;
+	private UserRepository userRepository;
+
+	private OrderRepository orderRepository;
+
+	private AddressRepository addressRepository;
+
+	private OrderItemRepository orderItemRepository;
+
+	@Override
+	@Transactional
+	public Order createOrder(User user, Address shippingAddress) throws OrderException, UserException {
+
+		shippingAddress.setUser(user);
+		Address address = addressRepository.save(shippingAddress);
+		user.getAddresses().add(address);
+		userRepository.save(user);
+
+		Cart cart = cartService.findUserCart(user.getId());
+        if (cart == null || cart.getCartItems() == null || cart.getCartItems().isEmpty()) {
+            throw new OrderException("Cannot create order: cart is empty or not found for user: " + user.getId());
+        }
+		List<OrderItem> orderItems = new ArrayList<>();
+
+		for (CartItem item : cart.getCartItems()) {
+			OrderItem orderItem = new OrderItem();
+
+			orderItem.setPrice(item.getPrice());
+			orderItem.setProduct(item.getProduct());
+			orderItem.setQuantity(item.getQuantity());
+			orderItem.setSize(item.getSize());
+			orderItem.setUserId(item.getUserId());
+			orderItem.setDiscountedPrice(item.getDiscountedPrice());
+
+			OrderItem createdOrderItem = orderItemRepository.save(orderItem);
+
+			orderItems.add(createdOrderItem);
+		}
+
+		Order createdOrder = new Order();
+		if (createdOrder.getPaymentDetails() == null) {
+			createdOrder.setPaymentDetails(new PaymentDetails());
+		}
+
+		createdOrder.setUser(user);
+		createdOrder.setOrderItems(orderItems);
+		createdOrder.setTotalPrice(cart.getTotalPrice());
+		createdOrder.setTotalDiscountedPrice(cart.getTotalDiscountedPrice());
+		createdOrder.setDiscount(cart.getDiscount());
+		createdOrder.setTotalItem(cart.getTotalItem());
+
+		createdOrder.setShippingAddress(address);
+		createdOrder.setOrderDate(LocalDateTime.now());
+		createdOrder.setOrderStatus(OrderStatus.PENDING);
+		createdOrder.getPaymentDetails().setStatus(PaymentStatus.PENDING);
+		createdOrder.setCreatedAt(LocalDateTime.now());
+
+		Order savedOrder = orderRepository.save(createdOrder);
+
+		for (OrderItem item : orderItems) {
+			item.setOrder(savedOrder);
+			orderItemRepository.save(item);
+		}
+		return savedOrder;
+
+	}
+
+	@Override
+	public Order placedOrder(Long orderId) throws OrderException {
+		Order order = findOrderById(orderId);
+		if (order.getPaymentDetails() == null) {
+			order.setPaymentDetails(new PaymentDetails());
+		}
+		order.setOrderStatus(OrderStatus.PLACED);
+		order.getPaymentDetails().setStatus(PaymentStatus.COMPLETED);
+
+		return orderRepository.save(order);
+	}
+
+	@Override
+	public Order confirmedOrder(Long orderId) throws OrderException {
+		Order order = findOrderById(orderId);
+		order.setOrderStatus(OrderStatus.CONFIRMED);
+
+		return orderRepository.save(order);
+	}
+
+	@Override
+	public Order shippedOrder(Long orderId) throws OrderException {
+		Order order = findOrderById(orderId);
+		order.setOrderStatus(OrderStatus.SHIPPED);
+		return orderRepository.save(order);
+	}
+
+	@Override
+	public Order deliveredOrder(Long orderId) throws OrderException {
+		Order order = findOrderById(orderId);
+		order.setOrderStatus(OrderStatus.DELIVERED);
+		return orderRepository.save(order);
+	}
+
+	@Override
+	public Order cancleOrder(Long orderId) throws OrderException {
+		Order order = findOrderById(orderId);
+		order.setOrderStatus(OrderStatus.CANCELLED);
+		return orderRepository.save(order);
+	}
+
+	@Override
+	public Order findOrderById(Long orderId) throws OrderException {
+		Optional<Order> opt = orderRepository.findById(orderId);
+
+		if (opt.isPresent()) {
+			return opt.get();
+		}
+		throw new OrderException("order not exist with id " + orderId);
+	}
+
+	@Override
+	public List<Order> usersOrderHistory(Long userId) throws OrderException {
+		return orderRepository.getUsersOrders(userId);
+
+	}
+
+	@Override
+	public List<Order> getAllOrders() {
+		return orderRepository.findAllByOrderByCreatedAtDesc();
+	}
+
+	@Override
+	public void deleteOrder(Long orderId) throws OrderException {
+		Order order = findOrderById(orderId);
+		orderRepository.delete(order);
+		log.info("Deleted order {}", orderId);
+	}
+}
